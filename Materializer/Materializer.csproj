@@ -1,9 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <LangVersion>latest</LangVersion>
     <RootNamespace>Materializer</RootNamespace>
+    <PackageId>Materializer</PackageId>
+    <Authors>Arjan Einbu</Authors>
+    <Company>KodeCompagniet AS</Company>
+    <PackageDescription>Use your interfaces without implementing them</PackageDescription>
+    <RepositoryUrl>https://github.com/aeinbu/Materializer</RepositoryUrl>
+  </PropertyGroup>
+
+  <PropertyGroup>
   </PropertyGroup>
 
   <ItemGroup>
