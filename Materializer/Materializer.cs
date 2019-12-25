@@ -8,15 +8,50 @@ namespace Materializer
 	public class Materializer
 	{
 		private readonly ModuleBuilder _moduleBuilder;
+		private readonly AssemblyBuilder _dynamicAssembly;
+		private readonly bool _forSerializableTypes;
 		private readonly Dictionary<Type, Type> _typeCache = new Dictionary<Type, Type>();
 
-		public Materializer(string assemblyName)
+		public Materializer(string assemblyName = "Dynamic_assembly_for_Materializer_created_types", bool forSerializable = false)
 		{
-			var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(assemblyName), AssemblyBuilderAccess.Run);
-			_moduleBuilder = assemblyBuilder.DefineDynamicModule(assemblyName);
+			_dynamicAssembly = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(assemblyName), AssemblyBuilderAccess.Run);
+			_moduleBuilder = _dynamicAssembly.DefineDynamicModule(assemblyName);
+			_forSerializableTypes = forSerializable;
+
+			if (_forSerializableTypes)
+			{
+				var currentAppDomain = AppDomain.CurrentDomain;
+				currentAppDomain.AssemblyResolve += new ResolveEventHandler(DynamicAssemblyResolvehandler);
+			}
 		}
 
-		public T Create<T>(bool markAsSerializable = false) where T : class
+
+		private Assembly DynamicAssemblyResolvehandler(object sender, ResolveEventArgs args)
+		{
+			if (args.Name == _dynamicAssembly.FullName)
+			{
+				return _dynamicAssembly;
+			}
+
+			return null;
+		}
+
+
+		public T New<T>() where T : class
+		{
+			var t = GetOrCreateType<T>();
+			var instance = Activator.CreateInstance(t);
+			return (T)instance;
+		}
+
+
+		public Type ConcreteTypeOf<T>() where T : class
+		{
+			return GetOrCreateType<T>();
+		}
+
+
+		private Type GetOrCreateType<T>() where T : class
 		{
 			var interfaceOfTypeToCreate = typeof(T);
 			if (!interfaceOfTypeToCreate.IsInterface)
@@ -26,29 +61,37 @@ namespace Materializer
 
 			if (!_typeCache.ContainsKey(interfaceOfTypeToCreate))
 			{
-				var createdType = CreateClass<T>(markAsSerializable, interfaceOfTypeToCreate);
+				var createdType = CreateType<T>(interfaceOfTypeToCreate);
 				_typeCache.Add(interfaceOfTypeToCreate, createdType);
 			}
 
-			var t = _typeCache[interfaceOfTypeToCreate];
-			var instance = Activator.CreateInstance(t);
-			return (T)instance;
+			return _typeCache[interfaceOfTypeToCreate];
 		}
 
-		private Type CreateClass<T>(bool markAsSerializable, Type interfaceOfTypeToCreate) where T : class
+
+		private Type CreateType<T>(Type interfaceOfTypeToCreate) where T : class
 		{
-			var typename = interfaceOfTypeToCreate.Name + Guid.NewGuid();
+			if (_typeCache.ContainsKey(interfaceOfTypeToCreate))
+			{
+				return _typeCache[interfaceOfTypeToCreate];
+			}
+
+			var typename = $"{interfaceOfTypeToCreate.Name}_{Guid.NewGuid()}";
 			var typeBuilder = _moduleBuilder.DefineType(typename, TypeAttributes.Public);
 
-			if (markAsSerializable)
+			if (_forSerializableTypes)
 			{
-				typeBuilder.SetCustomAttribute(typeof(SerializableAttribute).GetConstructor(new Type[]{}), null);
+				var serializableAttributeTypeInfo = typeof(SerializableAttribute);
+				var serializableAttributeConstructorInfo = serializableAttributeTypeInfo.GetConstructor(new Type[] { });
+				var serializableAttributeBuilder = new CustomAttributeBuilder(serializableAttributeConstructorInfo, new object[] { });
+				typeBuilder.SetCustomAttribute(serializableAttributeBuilder);
 			}
 
 			ImplementInterfaceProperties(interfaceOfTypeToCreate, typeBuilder);
 
 			return typeBuilder.CreateType();
 		}
+
 
 		private void ImplementInterfaceProperties(Type interfaceOfTypeToCreate, TypeBuilder typeBuilder)
 		{
@@ -64,21 +107,20 @@ namespace Materializer
 
 				var accessorAttributes = MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.Virtual | MethodAttributes.HideBySig;
 
-//TODO: how to make seperate get_interfacename.propertyname for different interfaces?
 				var mbGetAccessor = typeBuilder.DefineMethod($"get_{pi.Name}", accessorAttributes, pi.PropertyType, Type.EmptyTypes);
 				var mbGetIL = mbGetAccessor.GetILGenerator();
 				mbGetIL.Emit(OpCodes.Ldarg_0);
 				mbGetIL.Emit(OpCodes.Ldfld, backingFieldBuilder);
 				mbGetIL.Emit(OpCodes.Ret);
 
-				var mbSetAccessor = typeBuilder.DefineMethod($"set_{pi.Name}", accessorAttributes, null, new []{ pi.PropertyType });
+				var mbSetAccessor = typeBuilder.DefineMethod($"set_{pi.Name}", accessorAttributes, null, new[] { pi.PropertyType });
 				var mbSetIL = mbSetAccessor.GetILGenerator();
 				mbSetIL.Emit(OpCodes.Ldarg_0);
 				mbSetIL.Emit(OpCodes.Ldarg_1);
 				mbSetIL.Emit(OpCodes.Stfld, backingFieldBuilder);
 				mbSetIL.Emit(OpCodes.Ret);
 
-				var propertyBuilder = typeBuilder.DefineProperty($"{interfaceOfTypeToCreate.Name}.{pi.Name}", PropertyAttributes.HasDefault, pi.PropertyType, null);
+				var propertyBuilder = typeBuilder.DefineProperty(pi.Name, PropertyAttributes.HasDefault, pi.PropertyType, null);
 				propertyBuilder.SetGetMethod(mbGetAccessor);
 				propertyBuilder.SetSetMethod(mbSetAccessor);
 			}

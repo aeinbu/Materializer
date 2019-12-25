@@ -6,7 +6,7 @@ namespace Materializer.Tests
 {
 	public class Materializer_Create
 	{
-		public Lazy<Materializer> _lazy = new Lazy<Materializer>(() => new Materializer(Guid.NewGuid().ToString()));
+		public Lazy<Materializer> _lazy = new Lazy<Materializer>(() => new Materializer("Dynamic_Assembly_for_Materializer_Create_Tests", false));
 
 		public interface IOne
 		{
@@ -33,7 +33,7 @@ namespace Materializer.Tests
 		{
 			var materializer = _lazy.Value;
 
-			var one = materializer.Create<IOne>();
+			var one = materializer.New<IOne>();
 			one.Prop1 = 3;
 
 			Assert.Equal(3, one.Prop1);
@@ -44,9 +44,9 @@ namespace Materializer.Tests
 		{
 			var materializer = _lazy.Value;
 
-			var one = materializer.Create<IOne>();
+			var one = materializer.New<IOne>();
 
-			var two = materializer.Create<ITwo>();
+			var two = materializer.New<ITwo>();
 			two.Prop2 = one;
 
 			Assert.Equal(one, two.Prop2);
@@ -57,7 +57,7 @@ namespace Materializer.Tests
 		{
 			var materializer = _lazy.Value;
 
-			var three = materializer.Create<IThree>();
+			var three = materializer.New<IThree>();
 			three.Prop1 = 10;
 			three.Prop3 = 2.2f;
 
@@ -69,9 +69,9 @@ namespace Materializer.Tests
 		public void CombiningInterface()
 		{
 			var materializer = _lazy.Value;
-			var one = materializer.Create<IOne>();
+			var one = materializer.New<IOne>();
 
-			var four = materializer.Create<IFour>();
+			var four = materializer.New<IFour>();
 			four.Prop1 = 10;
 			four.Prop2 = one;
 
