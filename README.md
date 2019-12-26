@@ -1,4 +1,18 @@
 # Materializer
+Use your interfaces without implementing them
+
+## Get it on nuget
+.NET Core CLI
+```console
+$ dotnet add package Materializer
+```
+
+Package manager:
+```console
+Install-Package Materializer
+```
+
+## What does it do?
 Classes can only be combined by inheriting, while interfaces can be combined.
 
 With `Materializer` you can define your DTOs as interfaces without the need to create classes for each of the combinations you'll want to use.
