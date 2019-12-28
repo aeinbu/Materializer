@@ -5,20 +5,20 @@ using System.Reflection.Emit;
 
 namespace Materializer
 {
-	public class Materializer
+	public class TypeGenerator
 	{
 		private readonly ModuleBuilder _moduleBuilder;
 		private readonly AssemblyBuilder _dynamicAssembly;
-		private readonly bool _forSerializableTypes;
+		private readonly bool _forSerialization;
 		private readonly Dictionary<Type, Type> _typeCache = new Dictionary<Type, Type>();
 
-		public Materializer(string assemblyName = "Dynamic_assembly_for_Materializer_created_types", bool forSerializable = false)
+		public TypeGenerator(string assemblyName = "Dynamic_assembly_for_Materializer_created_types", bool forSerialization = false)
 		{
 			_dynamicAssembly = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(assemblyName), AssemblyBuilderAccess.Run);
 			_moduleBuilder = _dynamicAssembly.DefineDynamicModule(assemblyName);
-			_forSerializableTypes = forSerializable;
+			_forSerialization = forSerialization;
 
-			if (_forSerializableTypes)
+			if (_forSerialization)
 			{
 				var currentAppDomain = AppDomain.CurrentDomain;
 				currentAppDomain.AssemblyResolve += new ResolveEventHandler(DynamicAssemblyResolvehandler);
@@ -76,10 +76,10 @@ namespace Materializer
 				return _typeCache[interfaceOfTypeToCreate];
 			}
 
-			var typename = $"{interfaceOfTypeToCreate.Name}_{Guid.NewGuid()}";
+			var typename = $"{interfaceOfTypeToCreate.Name}";
 			var typeBuilder = _moduleBuilder.DefineType(typename, TypeAttributes.Public);
 
-			if (_forSerializableTypes)
+			if (_forSerialization)
 			{
 				var serializableAttributeTypeInfo = typeof(SerializableAttribute);
 				var serializableAttributeConstructorInfo = serializableAttributeTypeInfo.GetConstructor(new Type[] { });
@@ -93,7 +93,7 @@ namespace Materializer
 		}
 
 
-		private void ImplementInterfaceProperties(Type interfaceOfTypeToCreate, TypeBuilder typeBuilder)
+		private void ImplementInterfaceProperties(Type interfaceOfTypeToCreate, System.Reflection.Emit.TypeBuilder typeBuilder)
 		{
 			typeBuilder.AddInterfaceImplementation(interfaceOfTypeToCreate);
 			foreach (var implementedInterfaceType in interfaceOfTypeToCreate.GetInterfaces())

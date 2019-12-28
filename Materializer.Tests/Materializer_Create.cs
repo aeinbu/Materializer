@@ -6,7 +6,7 @@ namespace Materializer.Tests
 {
 	public class Materializer_Create
 	{
-		public Lazy<Materializer> _lazy = new Lazy<Materializer>(() => new Materializer("Dynamic_Assembly_for_Materializer_Create_Tests", false));
+		public Lazy<TypeGenerator> _lazy = new Lazy<TypeGenerator>(() => new TypeGenerator("Dynamic_Assembly_for_Materializer_Create_Tests", false));
 
 		public interface IOne
 		{

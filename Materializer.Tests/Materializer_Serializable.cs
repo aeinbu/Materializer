@@ -12,7 +12,7 @@ namespace Materializer.Tests
 {
 	public class Materializer_Serializable
 	{
-		public Lazy<Materializer> _lazy = new Lazy<Materializer>(() => new Materializer("Dynamic_Assembly_for_Materializer_Serializable_Tests", true));
+		public Lazy<TypeGenerator> _lazy = new Lazy<TypeGenerator>(() => new TypeGenerator("Dynamic_Assembly_for_Materializer_Serializable_Tests", true));
 
 		public interface IOne
 		{
