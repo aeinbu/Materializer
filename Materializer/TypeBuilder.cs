@@ -61,7 +61,7 @@ namespace Materializer
 
 			if (!_typeCache.ContainsKey(interfaceOfTypeToCreate))
 			{
-				var createdType = CreateType<T>(interfaceOfTypeToCreate);
+				var createdType = CreateType(interfaceOfTypeToCreate);
 				_typeCache.Add(interfaceOfTypeToCreate, createdType);
 			}
 
@@ -69,7 +69,7 @@ namespace Materializer
 		}
 
 
-		private Type CreateType<T>(Type interfaceOfTypeToCreate) where T : class
+		private Type CreateType(Type interfaceOfTypeToCreate)
 		{
 			if (_typeCache.ContainsKey(interfaceOfTypeToCreate))
 			{
