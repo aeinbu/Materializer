@@ -35,5 +35,4 @@ jobs:
       run: dotnet pack Materializer --configuration Release -p:PackageVersion=${tag#?}
 
     - name: Publish NuGet
-      # run: dotnet nuget push Materializer/bin/Release/*.nupkg -k -k ${{secrets.GITHUB_TOKEN}} -s https://nuget.pkg.github.com/aeinbu/index.json
       run: dotnet nuget push Materializer/bin/Release/*.nupkg -k ${{secrets.NUGET_ORG_TOKEN}} -s https://api.nuget.org/v3/index.json
