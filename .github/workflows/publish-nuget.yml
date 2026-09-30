@@ -8,6 +8,9 @@ jobs:
   publishToNuget:
 
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
 
     env:
       tag: ${{ github.event.release.tag_name }}
@@ -34,5 +37,11 @@ jobs:
     - name: Pack
       run: dotnet pack Materializer --configuration Release -p:PackageVersion=${tag#?}
 
+    - name: Login to NuGet.org
+      uses: NuGet/login@v1
+      id: login
+      with:
+        user: aeinbu
+
     - name: Publish NuGet
-      run: dotnet nuget push Materializer/bin/Release/*.nupkg -k ${{secrets.NUGET_ORG_TOKEN}} -s https://api.nuget.org/v3/index.json
+      run: dotnet nuget push Materializer/bin/Release/*.nupkg --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json
