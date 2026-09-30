@@ -12,6 +12,7 @@ jobs:
     env:
       tag: ${{ github.event.release.tag_name }}
       DOTNET_CLI_TELEMETRY_OPTOUT: true
+      DOTNET_ROLL_FORWARD: Major
 
     steps:
     - uses: actions/checkout@v1
@@ -19,7 +20,7 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 3.1.100
+        dotnet-version: 8.0.x
         source-url: https://nuget.pkg.github.com/aeinbu/index.json
         owner: aeinbu
       env:
