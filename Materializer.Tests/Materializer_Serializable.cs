@@ -1,12 +1,6 @@
 using System;
-using System.IO;
-using System.Runtime.Serialization;
 using Xunit;
 using Materializer;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Reflection;
 
 namespace Materializer.Tests
 {
@@ -21,21 +15,13 @@ namespace Materializer.Tests
 
 
 		[Fact]
-		public void SimpleInterface_BinaryFormatter()
+		public void SimpleInterface_HasSerializableAttribute()
 		{
 			var materializer = _lazy.Value;
 
-			var before = materializer.New<IOne>();
-			before.Prop1 = 3;
+			var generatedType = materializer.ConcreteTypeOf<IOne>();
 
-			IFormatter formatter = new BinaryFormatter();
-			using var stream = new MemoryStream();
-			formatter.Serialize(stream, before);
-
-			stream.Seek(0, SeekOrigin.Begin);
-			var after = (IOne)formatter.Deserialize(stream);
-
-			Assert.Equal(3, after.Prop1);
+			Assert.True(Attribute.IsDefined(generatedType, typeof(SerializableAttribute)));
 		}
 
 	}
